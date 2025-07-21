@@ -1,2 +1,2 @@
 @echo off
-python recycler.py %*
+python %~dp0recycler.py %~dp0 %*
