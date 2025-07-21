@@ -1,3 +1,3 @@
 [path]
 under_user_profile = true
-recycle_bin = "/py-recycle-bin"
+recycle_bin = "py-recycle-bin"

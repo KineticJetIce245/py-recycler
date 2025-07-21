@@ -2,16 +2,12 @@ import os
 import sys
 import urllib.request
 import urllib.error
-from sys import platform
+import platform
 import tomllib
 
 
 """
 directory_path = f"{os.environ['USERPROFILE']}\\Recycle.Bin"
-contents = os.listdir(directory_path)
-for item in contents:
-    print(item)
-
 print("hello world")
 """
 
@@ -46,6 +42,9 @@ def parse_parameters(received_parm) -> list:
             else:
                 options[key] = value
         elif param.startswith("-"):
+            if (len(param[1:]) != 1):
+                print(f"Invalid short option format: {param}")
+                exit(1)
             key = SHORT_OPTION[param[1:]]
             options[key] = True
         else:
@@ -76,9 +75,11 @@ class Recycler:
     __logloc: str
     __bin: str
 
-    def __init__(self, logloc: str, bin: str)
-    self.__loginfo = logloc
-    self.__bin = logloc
+    def __init__(self, logloc: str, bin: str):
+        self.__loginfo = logloc
+        self.__bin = bin
+        if not os.path.exists(self.__bin):
+            os.makedirs(self.__bin)
 
     def recycle(self, file_path: str) -> bool:
         """
@@ -163,9 +164,29 @@ if len(parameters) < 2:
     print("Error in the launch parameters, config file location missing.")
     exit(1)
 config = open_config(f"{parameters[1]}/config.toml")
-recycler = Recycler(f"{parameters[1]}/reclog.csv")
-other_parameters = parse_parameters(parameters)
 
+"""
+Recycle Bin Initialization
+"""
+if (config["path"]["under_user_profile"] is True):
+    if platform.system() == "Windows":
+        recycle_bin = f"{os.environ['USERPROFILE']}\\{
+            config['path']['recycle_bin']}"
+    else:
+        recycle_bin = f"{os.path.expanduser(
+            '~')}/{config['path']['recycle_bin']}"
+else:
+    recycle_bin = config["path"]["recycle_bin"]
+
+recycler = Recycler(f"{parameters[1]}/reclog.csv", recycle_bin)
+
+contents = os.listdir(recycle_bin)
+for item in contents:
+    print(item)
+
+
+other_parameters = parse_parameters(parameters)
+say(f"Recycle Bin Path: {recycle_bin}")
 if options["recovery"]:
     say("Entering recovery mode...")
 elif options["config"]:
@@ -173,4 +194,4 @@ elif options["config"]:
 elif len(other_parameters) > 0:
     say(f"Processing files: {', '.join(other_parameters)}")
     for file_path in other_parameters:
-        recycler.recycle(file_path):
+        recycler.recycle(file_path)
