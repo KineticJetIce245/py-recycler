@@ -2,14 +2,7 @@ import os
 import sys
 import urllib.request
 import urllib.error
-import platform
 import tomllib
-
-
-"""
-directory_path = f"{os.environ['USERPROFILE']}\\Recycle.Bin"
-print("hello world")
-"""
 
 
 SHORT_OPTION = {
@@ -20,21 +13,21 @@ SHORT_OPTION = {
 }
 
 options = {
-    "recovery": False,  # If true, entering recovery mode
-    "silent": False,  # If true, no output will be printed to the console
-    "log": False,  # If true, output will be written to a log file
-    "config": False,  # If true, enable config mode
+    "recovery": False,      # If true, entering recovery mode
+    "silent": False,        # If true, no output will be printed to the console
+    "log": False,           # If true, output will be written to a log file
+    "config": False,        # If true, enable config mode
 }
 
 
 def parse_parameters(received_parm) -> list:
     """
-    Parses the listed parameters,
-    adds the options to the options dictionary
-    and returns a list files to be processed.
+    # Parses the listed parameters,
+    # adds the options to the options dictionary
+    # and returns a list files to be processed.
     """
     other_param = []
-    for param in received_parm[2:]:
+    for param in received_parm[3:]:
         if param.startswith("--"):
             key, value = param[2:].split("=", 1)
             if (value.lower() == "false" or value.lower() == "true"):
@@ -68,8 +61,8 @@ def say(message: str):
 
 class Recycler:
     """
-    This class is records and load the logs
-    of the recycle bin.
+    # This class is records and load the logs
+    # of the recycle bin.
     """
 
     __logloc: str
@@ -81,25 +74,51 @@ class Recycler:
         if not os.path.exists(self.__bin):
             os.makedirs(self.__bin)
 
-    def recycle(self, file_path: str) -> bool:
+    def analyze_regex(self, call_path, file_path) -> dict[str]:
         """
-        This method recycles the file at the given path.
-        Returns True if successful, False otherwise.
+        # This method examines the file path to determine
+        # if it contains a regex pattern or wildcard.
+        # If it does, it returns a dictionary mapping each
+        # matching file's absolute path to its destination path.
         """
-        if not os.path.exists(file_path):
-            say(f"File {file_path} does not exist.")
-            return False
+        # NOTE: Rephrased by Copilot.
 
-        say(f"Recycling file: {file_path}")
+        paths = {}
+
+        if file_path == "." or file_path == "*":
+            contents = os.listdir(call_path)
+            for item in contents:
+                destination = os.path.join(
+                    self.__bin, os.path.basename(call_path))
+                paths[os.path.join(call_path, item)] = destination
+        else:
+            pass
+
+        return paths
+
+    def recycle(self, call_path: str, file_path: str) -> bool:
+        """
+        # This method recycles the file at the given path.
+        # Returns True if successful, False otherwise.
+        """
+
+        # Our destiny is recycle bin :P
+        destinies = self.analyze_regex(call_path, file_path)
+
+        for p in destinies.keys():
+            if not os.path.exists(p):
+                say(f"File / folder {p} does not exist.")
+                continue
+            say(f"Recycling {p} to {destinies[p]}")
 
         return True
 
 
 def download_config(config_location) -> bool:
     """
-    Downloads the configuration file from
-    the github repository and saves it as
-    'config.toml'
+    # Downloads the configuration file from
+    # the github repository and saves it as
+    # 'config.toml'
     """
 
     url = "https://raw.githubusercontent.com/KineticJetIce245/py-recycler/refs/heads/main/config.toml"
@@ -157,32 +176,32 @@ def mainCycle():
 
 
 """
-Initialization
+# Initialization
 """
 parameters = sys.argv
-if len(parameters) < 2:
+"""
+# From the third parameter onwards
+# first parameters: .py location
+# second parameters: .py folder
+# thrid parameters: location where it is called
+"""
+if len(parameters) < 3:
     print("Error in the launch parameters, config file location missing.")
     exit(1)
-config = open_config(f"{parameters[1]}/config.toml")
+config = open_config(os.path.join(parameters[1], "config.toml"))
+
+print(parameters)
 
 """
-Recycle Bin Initialization
+# Recycle Bin Initialization
 """
 if (config["path"]["under_user_profile"] is True):
-    if platform.system() == "Windows":
-        recycle_bin = f"{os.environ['USERPROFILE']}\\{
-            config['path']['recycle_bin']}"
-    else:
-        recycle_bin = f"{os.path.expanduser(
-            '~')}/{config['path']['recycle_bin']}"
+    recycle_bin = os.path.join(os.path.expanduser(
+        '~'), config['path']['recycle_bin'])
 else:
     recycle_bin = config["path"]["recycle_bin"]
 
-recycler = Recycler(f"{parameters[1]}/reclog.csv", recycle_bin)
-
-contents = os.listdir(recycle_bin)
-for item in contents:
-    print(item)
+recycler = Recycler(os.path.join(parameters[1], "reclog.csv"), recycle_bin)
 
 
 other_parameters = parse_parameters(parameters)
@@ -192,6 +211,6 @@ if options["recovery"]:
 elif options["config"]:
     say("Entering config mode...")
 elif len(other_parameters) > 0:
-    say(f"Processing files: {', '.join(other_parameters)}")
+    say(f"Processing expressions: {', '.join(other_parameters)}")
     for file_path in other_parameters:
-        recycler.recycle(file_path)
+        recycler.recycle(parameters[2], file_path)
