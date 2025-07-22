@@ -12,7 +12,7 @@ else
     EXT = .so
 endif
 
-TARGET = ..\recycle_api$(EXT)
+TARGET = recycle_api$(EXT)
 SRC = recycle-api.c
 
 all: $(TARGET)

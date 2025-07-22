@@ -1,3 +1,2 @@
 [path]
-under_user_profile = true
-recycle_bin = "py-recycle-bin"
+log_file = "py-recycle-log.txt"
