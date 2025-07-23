@@ -1,2 +1,8 @@
 [path]
-log_file = "py-recycle-log.txt"
+log_file = "py-recycle.log"
+buffer_bin = "py-recycle.bin"
+
+[options]
+silent = false
+log = false
+buffer = false

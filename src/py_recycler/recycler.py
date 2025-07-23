@@ -1,7 +1,9 @@
 import os
+from .prompt import Prompt
+from clib import recycle_api as crapi
 
 
-def analyze_regex(call_path, file_path) -> dict[str]:
+def __analyze_regex(call_path, file_path) -> dict[str]:
     """
     # This method examines the file path to determine
     # if it contains a regex pattern or wildcard.
@@ -24,12 +26,21 @@ def analyze_regex(call_path, file_path) -> dict[str]:
     return paths
 
 
-def recycle(call_path: str, file_path: str) -> bool:
-    """
-    # This method recycles the file at the given path.
-    # Returns True if successful, False otherwise.
-    """
+class Recycler:
+    def __init__(self, buffer_bin_path: str):
+        self.buffer_bin_path = buffer_bin_path
 
-    # Our destiny is recycle bin :P
+    def move_to_buffer_bin(self, file_path: str) -> bool:
+        pass
 
-    return True
+    def check_buffer_bin(self) -> list:
+        pass
+
+    def recover_from_buffer_bin(self, file_path: str, prompt: Prompt) -> bool:
+        pass
+
+    def empty_buffer_bin(self, prompt: Prompt) -> bool:
+        pass
+
+    def check_recycle_bin(self) -> list:
+        pass

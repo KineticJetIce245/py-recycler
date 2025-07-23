@@ -1,4 +1,4 @@
-from .logger import Looger
+from .prompt import Prompt
 
 
 def parse_parameters(params, options, short_options) -> list:
@@ -7,21 +7,30 @@ def parse_parameters(params, options, short_options) -> list:
     # adds the options to the options dictionary
     # and returns a list files to be processed.
     """
-    temp_logger = Looger(silent=False, log=False)
+    temp_prompt = Prompt()
     file_folder_param = []
+
     for param in params:
+
         if param.startswith("--"):
             key, value = param[2:].split("=", 1)
             if (value.lower() == "false" or value.lower() == "true"):
                 options[key] = (value.lower() == "true")
             else:
                 options[key] = value
+
         elif param.startswith("-"):
             if (len(param[1:]) != 1):
-                temp_logger.say(f"Invalid short option format: {param}")
+                temp_prompt.say(f"Invalid short option format: {param}")
                 exit(1)
-            key = short_options[param[1:]]
-            options[key] = True
+            elif not (param[1:] in short_options.keys()):
+                temp_prompt.say(f"Invalid short option: {param}")
+                exit(1)
+            else:
+                key = short_options[param[1:]]
+                options[key] = not options[key]
+
         else:
             file_folder_param.append(param)
+
     return file_folder_param
