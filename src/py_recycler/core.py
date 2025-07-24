@@ -7,7 +7,11 @@ def display_help(prompt: Prompt):
     pass
 
 
-def run(run_options: dict[str, any]):
+def mainCycle(prompt: Prompt):
+    pass
+
+
+def run(rop: dict[str, any]):
     """
     # This function first determines the operation mode
     # then analyzes the parameters.
@@ -18,43 +22,39 @@ def run(run_options: dict[str, any]):
     }
     flags_received = 0
     for keys in conflicting_options:
-        flags_received += run_options.options[keys]
+        flags_received += rop["options"][keys]
     if (flags_received > 1):
-        run_options.prompt.say("Conflicting options received.")
+        rop["prompt"].say("Conflicting options received.")
         exit(1)
 
     # Case help
-    if (run_options.options["help"]):
-        display_help(run_options.prompt)
+    if (rop["options"]["help"]):
+        display_help(rop["prompt"])
 
     # Case empty buffer bin
-    elif (run_options.options["empty"]):
-        run_options.recycler.empty_buffer_bin(run_options.prompt)
+    elif (rop["options"]["empty"]):
+        rop["recycler"].empty_buffer_bin(rop["prompt"])
 
     # Case empty recycle bin
-    elif (run_options.options["emptyrecycle"]):
-        run_options.recycler.empty_recycle_bin(run_options.prompt)
+    elif (rop["options"]["emptyrecycle"]):
+        rop["recycler"].empty_recycle_bin(rop["prompt"])
 
     # Case recovery
-    elif (run_options.options["recovery"]):
-        run_options.recycler.recover_files(
-            run_options.params, run_options.prompt)
+    elif (rop["options"]["recovery"]):
+        rop["recycler"].recover_files(
+            rop["parameters"], rop["prompt"])
 
     # Case Configuration
-    elif (run_options.options["config"]):
-        if (len(run_options.parameters) > 2):
-            run_options.prompt.say(
+    elif (rop["options"]["config"]):
+        if (len(rop["parameters"]) > 2):
+            rop["prompt"].say(
                 "Configuration mode accepts only two parameters.")
             exit(1)
-        modify(run_options.conf_file,
-               run_options.params[0], run_options.params[1])
+        modify(rop["conf_file"],
+               rop["parameters"][0], rop["parameters"][1])
 
     else:
-        if (len(run_options.params) == 0):
-            mainCycle(run_options.prompt)
+        if (len(rop["parameters"]) == 0):
+            mainCycle(rop["prompt"])  # launch the application mode
         else:
             pass
-
-
-def mainCycle(prompt: Prompt):
-    pass

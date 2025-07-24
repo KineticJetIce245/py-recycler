@@ -29,10 +29,10 @@ options = {
     # Special mode (empty): not receiving any file/folder paths
     "empty": False,         # If true, empties files in buffer bin
     "emptyrecycle": False,  # If true, permernant delet files in recycle bin
-    # Special mode (recovery): receiving file/folder paths in buffer bin
-    "recovery": False,      # If true, recover files from the buffer bin
     # Speical mode (config): receiving configuration entries
     "config": False,        # If true, enable config mode
+    # Special mode (recovery): receiving file/folder paths in buffer bin
+    "recovery": False,      # If true, recover files from the buffer bin
     # Output flags
     "silent": False,        # If true, no output will be printed to the console
     "log": False,           # If true, output will be written to a log file
@@ -50,7 +50,7 @@ options = {
 """
 input_params = sys.argv
 if len(input_params) < 3:
-    print("Error in the launch parameters, config file location missing.")
+    print("Launch parameters do not match expectation, check 'rc.bat'.")
     exit(1)
 
 """
@@ -64,17 +64,23 @@ params = args_parser.parse_parameters(input_params[3:], options, SHORT_OPTION)
 permn_prompt = prompt.Prompt(silent=options["silent"], log=options["log"],
                              logloc=conf["path"]["log_file"])
 
-buffer_bin_path = conf["path"]["buffer_bin"]
-recycler_instance = recycler.Recycler(buffer_bin_path)
+if conf["path"]["under_userprofile"]:
+    buffer_bin_path = os.path.join(
+        os.environ["USERPROFILE"], conf["path"]["buffer_bin"])
+else:
+    buffer_bin_path = conf["path"]["buffer_bin"]
+recycler_instance = recycler.Recycler(
+    input_params[2], buffer_bin_path, permn_prompt)
 
 print(conf)
 print(params)
 print(options)
-
+print(buffer_bin_path)
 """
 # Run the core functionality with the provided parameters and options
 """
 run_options = {
+    "call_path": input_params[2],
     "parameters": params,
     "options": options,
     "recycler": recycler_instance,
