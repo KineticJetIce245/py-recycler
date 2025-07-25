@@ -57,4 +57,8 @@ def run(rop: dict[str, any]):
         if (len(rop["parameters"]) == 0):
             mainCycle(rop["prompt"])  # launch the application mode
         else:
-            pass
+            for file_path in rop["parameters"]:
+                if (rop["options"]["buffer"]):
+                    rop["recycler"].move_to_buffer_bin(file_path)
+                else:
+                    rop["recycler"].move_to_recycle_bin(file_path)

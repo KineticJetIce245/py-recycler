@@ -62,20 +62,22 @@ if len(input_params) < 3:
 conf = config.load(os.path.join(input_params[1], "config.toml"))
 params = args_parser.parse_parameters(input_params[3:], options, SHORT_OPTION)
 permn_prompt = prompt.Prompt(silent=options["silent"], log=options["log"],
-                             logloc=conf["path"]["log_file"])
+                             logloc=conf["path"]["log_file"],
+                             yes=options["yes"])
 
 if conf["path"]["under_userprofile"]:
     buffer_bin_path = os.path.join(
         os.environ["USERPROFILE"], conf["path"]["buffer_bin"])
 else:
     buffer_bin_path = conf["path"]["buffer_bin"]
-recycler_instance = recycler.Recycler(
-    input_params[2], buffer_bin_path, permn_prompt)
+recycler_options = {
+    "call_path": input_params[2],
+    "buffer_bin_path": buffer_bin_path,
+    "prompt": permn_prompt,
+    "buffer_file": conf["path"]["buffer_file"],
+}
+recycler_instance = recycler.Recycler(recycler_options)
 
-print(conf)
-print(params)
-print(options)
-print(buffer_bin_path)
 """
 # Run the core functionality with the provided parameters and options
 """
