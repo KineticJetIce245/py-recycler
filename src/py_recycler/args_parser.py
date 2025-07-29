@@ -13,11 +13,16 @@ def parse_parameters(params, options, short_options) -> list:
     for param in params:
 
         if param.startswith("--"):
-            key, value = param[2:].split("=", 1)
-            if (value.lower() == "false" or value.lower() == "true"):
-                options[key] = (value.lower() == "true")
-            else:
-                options[key] = value
+
+            try:
+                key, value = param[2:].split("=", 1)
+                if (value.lower() == "false" or value.lower() == "true"):
+                    options[key] = (value.lower() == "true")
+                else:
+                    options[key] = value
+            except ValueError:
+                key = param[2:]
+                options[key] = True
 
         elif param.startswith("-"):
             if (len(param[1:]) != 1):

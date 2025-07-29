@@ -4,6 +4,18 @@ from .config import modify
 
 
 def display_help(prompt: Prompt):
+    prompt.say("""usage:
+    recycle: rc <file/folder> [<file/folder> ...]
+    empty buffer bin: rc [-e | --empty=<true/false>]
+    empty recycle bin: rc [-x | --emptyrecycle=<true/false>]
+    modify config file: rc [-c | --config=<true/false>]
+<name> <value>
+    recover files from buffer bin: rc [-r | --recovery=<true/false>]
+<file/folder> [<file/folder> ...]
+    display help: rc [-h | --help=<true/false>]
+    options: [-s | --silent=<true/false>] [-l | --log=<true/false>]
+[-y | --yes=<true/false>] [-b | --buffer=<true/false>]
+    """)
     pass
 
 
