@@ -62,8 +62,13 @@ def run(rop: dict[str, any]):
             rop["prompt"].say(
                 "Configuration mode accepts only two parameters.")
             exit(1)
-        modify(rop["conf_file"],
-               rop["parameters"][0], rop["parameters"][1])
+        elif (len(rop["parameters"]) == 0):
+            rop["prompt"].say(rop["options"])
+        elif (len(rop["parameters"]) == 1):
+            rop["prompt"].say(rop["options"][rop["parameters"][0]])
+        else:
+            modify(rop["conf_file"],
+                   rop["parameters"][0], rop["parameters"][1])
 
     else:
         if (len(rop["parameters"]) == 0):

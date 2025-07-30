@@ -60,6 +60,9 @@ if len(input_params) < 3:
 # Create Recycler instance
 """
 conf = config.load(os.path.join(input_params[1], "config.toml"))
+for key in conf["options"].keys():
+    options[key] = conf["options"][key]
+
 params = args_parser.parse_parameters(input_params[3:], options, SHORT_OPTION)
 permn_prompt = prompt.Prompt(silent=options["silent"], log=options["log"],
                              logloc=conf["path"]["log_file"],
@@ -74,7 +77,7 @@ recycler_options = {
     "call_path": input_params[2],
     "buffer_bin_path": buffer_bin_path,
     "prompt": permn_prompt,
-    "buffer_file": conf["path"]["buffer_file"],
+    "buffer_file": os.path.join(input_params[1], conf["path"]["buffer_file"]),
 }
 recycler_instance = recycler.Recycler(recycler_options)
 

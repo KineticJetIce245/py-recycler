@@ -1,7 +1,7 @@
 [path]
 under_userprofile = true
 log_file = "py-recycle.log"
-buffer_file = "buffer.toml"
+buffer_file = "buffer.db"
 buffer_bin = "py-recycle.bin"
 
 [options]
