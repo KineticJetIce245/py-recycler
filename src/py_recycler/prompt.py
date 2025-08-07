@@ -1,8 +1,9 @@
 class Prompt:
 
     def __init__(self, silent: bool = False, log: bool = False,
-                 logloc: str = None, yes: bool = False):
+                 start_up: bool = True, logloc: str = None, yes: bool = False):
         self.silent = silent
+        self.start_up = start_up
         self.log = log
         self.yes = yes
 
@@ -16,6 +17,19 @@ class Prompt:
         if self.log is True:
             self.log(message)
 
-    def prompt(self, message: str) -> str:
-        # TODO: Implement prompting functionality
-        pass
+    # Always outputs to the terminal
+    def startup(self, message: str):
+        if self.start_up is True:
+            print(message)
+
+    def verify(self, message: str) -> str:
+        while True:
+            answer = input(message)
+            if (self.yes):
+                return True
+            elif (answer.lower() == "y" or answer.lower() == "yes"):
+                return True
+            elif (answer.lower() == "n" or answer.lower() == "no"):
+                return False
+            else:
+                print("Unrecoginzed answer, please answer with 'y' or 'n'.")

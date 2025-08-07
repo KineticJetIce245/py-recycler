@@ -43,7 +43,10 @@ def run(rop: dict[str, any]):
     if (rop["options"]["help"]):
         display_help(rop["prompt"])
 
-    # Case empty buffer bin
+    elif (rop["options"]["undo"]):
+        pass
+
+        # Case empty buffer bin
     elif (rop["options"]["empty"]):
         rop["recycler"].empty_buffer_bin(rop["prompt"])
 

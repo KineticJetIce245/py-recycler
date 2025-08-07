@@ -10,9 +10,11 @@ from src.py_recycler import config
 from src.py_recycler import core
 from src.py_recycler import prompt
 from src.py_recycler import args_parser
+from src.py_recycler import style
 from src.py_recycler import recycler
 
 SHORT_OPTION = {
+    "u": "undo",
     "h": "help",
     "e": "empty",
     "x": "emptyrecycle",
@@ -21,9 +23,12 @@ SHORT_OPTION = {
     "s": "silent",
     "l": "log",
     "b": "buffer",
-    "y": "yes"
+    "y": "yes",
+    "w": "regex",
 }
 options = {
+    # Special mode (undo): undoing the last recycle operation
+    "undo": False,
     # Special mode (help): displaying help message
     "help": False,
     # Special mode (empty): not receiving any file/folder paths
@@ -39,6 +44,7 @@ options = {
     # Normal mode
     "buffer": False,        # If true, first sends files to buffer bin
     "yes": False,           # If true, yes will be assumed for all prompts
+    "regex": False,         # If true, regex will be used for file matching
 }
 
 """
@@ -65,8 +71,13 @@ for key in conf["options"].keys():
 
 params = args_parser.parse_parameters(input_params[3:], options, SHORT_OPTION)
 permn_prompt = prompt.Prompt(silent=options["silent"], log=options["log"],
+                             start_up=conf["start_up"]["enable"],
                              logloc=conf["path"]["log_file"],
                              yes=options["yes"])
+
+permn_prompt.startup(f"{style.TCOLORS["tip"]}{
+    conf["start_up"]["message"].replace("[loc]", os.path.join(input_params[1], "config.toml"))}{
+    style.TCOLORS["style end"]}")
 
 if conf["path"]["under_userprofile"]:
     buffer_bin_path = os.path.join(
@@ -78,6 +89,7 @@ recycler_options = {
     "buffer_bin_path": buffer_bin_path,
     "prompt": permn_prompt,
     "buffer_file": os.path.join(input_params[1], conf["path"]["buffer_file"]),
+    "regex": options["regex"],
 }
 recycler_instance = recycler.Recycler(recycler_options)
 
@@ -92,4 +104,6 @@ run_options = {
     "conf_file": conf,
     "prompt": permn_prompt
 }
+# print(options)
+# print(params)
 core.run(run_options)

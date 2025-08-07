@@ -8,3 +8,9 @@ buffer_bin = "py-recycle.bin"
 silent = false
 log = false
 buffer = true
+
+[start_up]
+enable = true
+# in main.py [loc] will be replaced with the actual path of the config file
+message = """Loaded configurations from [loc].
+Move files to buffer bin for easy recovery using rc command."""
