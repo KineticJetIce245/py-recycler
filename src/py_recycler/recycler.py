@@ -2,6 +2,7 @@ import os
 import time
 import shutil
 import sqlite3
+from datetime import datetime
 from .prompt import Prompt
 from .style import TCOLORS
 from clib import recycle_api as crapi
@@ -14,7 +15,6 @@ class Recycler:
         self.prompt = iop["prompt"]
         self.buffer_file = iop["buffer_file"]
         self.regex = iop["regex"]
-        print(self.__db_read_all())
 
     def __db_initialize(self, cursor: sqlite3.Cursor):
         cursor.execute('''
@@ -174,8 +174,42 @@ class Recycler:
                 print(f"{TCOLORS["error"]}Error moving {TCOLORS["path"]}{
                       path}{TCOLORS["error"]}to recycle bin: {e}")
 
-    def check_buffer_bin(self) -> list:
-        print("Check buffer bin called")
+    def view_buffer_bin(self, name: str = None):
+        db = self.__db_read_all()
+        files = {}
+        for entry in db:
+            if files.get(entry[1]) is None:
+                files[entry[1]] = {}
+            if files[entry[1]].get(entry[2]) is None:
+                files[entry[1]][entry[2]] = []
+            files[entry[1]][entry[2]].append(
+                datetime.utcfromtimestamp(int(entry[3]/1000)).strftime('%Y-%m-%d %H:%M:%S'))
+
+        message = ""
+        if name is not None:
+            if name not in files:
+                self.prompt.say(f"{TCOLORS["error"]}Error{TCOLORS["style end"]}: No file with name {
+                                TCOLORS["success"]}{name}{TCOLORS["style end"]} found in buffer bin.")
+                return
+            message += f"File/folder with name {
+                TCOLORS["success"]}{name}{TCOLORS["style end"]}:\n"
+            for path in files[name].keys():
+                message += f"\t Moved to buffer bin from {TCOLORS["path"]
+                                                          }{path}{TCOLORS["style end"]}:\n"
+                for t in files[name][path]:
+                    message += f"\t\t Versions: {t}\n"
+
+        else:
+            for basename in files.keys():
+                message += f"File/folder with name {
+                    TCOLORS["success"]}{basename}{TCOLORS["style end"]}:\n"
+                for path in files[basename].keys():
+                    message += f"\t Moved to buffer bin from {TCOLORS["path"]
+                                                              }{path}{TCOLORS["style end"]}:\n"
+                    for t in files[basename][path]:
+                        message += f"\t\t Versions: {t}\n"
+
+        self.prompt.say(message)
 
     def recover_from_buffer_bin(self, file_path: str, prompt: Prompt) -> bool:
         print("Rover from buffer bin called")

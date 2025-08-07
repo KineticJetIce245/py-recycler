@@ -48,16 +48,24 @@ def run(rop: dict[str, any]):
 
         # Case empty buffer bin
     elif (rop["options"]["empty"]):
-        rop["recycler"].empty_buffer_bin(rop["prompt"])
+        rop["recycler"].empty_buffer_bin()
 
     # Case empty recycle bin
     elif (rop["options"]["emptyrecycle"]):
-        rop["recycler"].empty_recycle_bin(rop["prompt"])
+        rop["recycler"].empty_recycle_bin()
 
     # Case recovery
     elif (rop["options"]["recovery"]):
         rop["recycler"].recover_files(
-            rop["parameters"], rop["prompt"])
+            rop["parameters"])
+
+    # Case view
+    elif (rop["options"]["view"]):
+        if len(rop["parameters"]) == 0:
+            rop["recycler"].view_buffer_bin()
+        else:
+            for name in rop["parameters"]:
+                rop["recycler"].view_buffer_bin(name)
 
     # Case Configuration
     elif (rop["options"]["config"]):

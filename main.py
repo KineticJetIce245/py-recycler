@@ -20,6 +20,7 @@ SHORT_OPTION = {
     "x": "emptyrecycle",
     "c": "config",
     "r": "recovery",
+    "v": "view",
     "s": "silent",
     "l": "log",
     "b": "buffer",
@@ -38,6 +39,8 @@ options = {
     "config": False,        # If true, enable config mode
     # Special mode (recovery): receiving file/folder paths in buffer bin
     "recovery": False,      # If true, recover files from the buffer bin
+    # Special mode (view): viewing files in buffer bin
+    "view": False,
     # Output flags
     "silent": False,        # If true, no output will be printed to the console
     "log": False,           # If true, output will be written to a log file
