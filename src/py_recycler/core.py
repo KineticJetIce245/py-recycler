@@ -4,19 +4,38 @@ from .config import modify
 
 
 def display_help(prompt: Prompt):
-    prompt.say("""usage:
-    recycle: rc <file/folder> [<file/folder> ...]
-    empty buffer bin: rc [-e | --empty=<true/false>]
-    empty recycle bin: rc [-x | --emptyrecycle=<true/false>]
-    modify config file: rc [-c | --config=<true/false>]
-<name> <value>
-    recover files from buffer bin: rc [-r | --recovery=<true/false>]
-<file/folder> [<file/folder> ...]
-    display help: rc [-h | --help=<true/false>]
-    options: [-s | --silent=<true/false>] [-l | --log=<true/false>]
-[-y | --yes=<true/false>] [-b | --buffer=<true/false>]
-    """)
-    pass
+    prompt.say("""Recycles files/folders to buffer bin or to recycle bin
+(default depends on the \033[38;5;2mconfig.toml\033[0m file), using -b option
+to reverse the option:
+    rc <file/folder> [<file/folder> ...]
+
+Sends everything in buffer bin to recycle bin, files/folders
+sent to recycle bin \033[38;5;1mcan not\033[0m be recovered with this program:
+    rc [-e | --empty=<true/false>]
+
+\033[38;5;1mPERMANENTLY\033[0m deletes all files/folders in recycle bin:
+    rc [-x | --emptyrecycle=<true/false>]
+
+Modifies the config file, when no name or value is specified,
+prints the current configuration, when only name is specified,
+prints the value of the name, when both name and value are specified,
+modifies the value of the name:
+    rc [-c | --config=<true/false>] [<name> <value>]
+
+Recovers files from buffer bin, when files/folders are not specified it
+recovers last file/folder sent to buffer bin:
+    rc [-r | --recovery=<true/false>] [<file/folder> ...]
+
+Shows files in buffer bin, when files/folders are not specified, it shows all
+in buffer bin:
+    rc [-v | --view=<true/false>] [<file/folder> ...]
+
+Display this help message:
+    rc [-h | --help=<true/false>]
+
+Options:
+    [-s | --silent=<true/false>] [-l | --log=<true/false>] [-y | --yes=<true/false>]
+    [-b | --buffer=<true/false>]""")
 
 
 def mainCycle(prompt: Prompt):
