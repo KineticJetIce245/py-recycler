@@ -144,10 +144,16 @@ class Recycler:
                 os.makedirs(os.path.dirname(
                     destinies[path]["target"]), exist_ok=True)
                 shutil.move(path, destinies[path]["target"])
+<<<<<<< HEAD
+                self.prompt.say(f"Moving {TCOLORS["path"]}{path}{TCOLORS["style end"]}"
+                                f"to buffer bin: {TCOLORS["path"]}{
+                                    destinies[path]["target"]}"
+=======
                 self.prompt.say(f"Moving {TCOLORS["path"]}{path}"
                                 f"{TCOLORS["style end"]} to buffer bin: "
                                 f"{TCOLORS["path"]}"
                                 f"{destinies[path]["target"]}."
+>>>>>>> d3b243486d746daf449df5bebed211cd1a930283
                                 f"{TCOLORS["style end"]}")
                 self.__db_log(
                     destinies[path]["name"],
@@ -159,8 +165,13 @@ class Recycler:
                     f"{destinies[path]["path"]}{TCOLORS["success"]}"
                     f" to buffer bin.{TCOLORS["style end"]}")
             except Exception as e:
+<<<<<<< HEAD
+                self.prompt.say(f"{TCOLORS["error"]}Error moving "
+                                f"{TCOLORS["path"]}{path}{TCOLORS["error"]}"
+=======
                 self.prompt.say(f"{TCOLORS["error"]}Error moving"
                                 f" {TCOLORS["path"]}{path}{TCOLORS["error"]}"
+>>>>>>> d3b243486d746daf449df5bebed211cd1a930283
                                 f" to buffer bin{TCOLORS["style end"]}: {e}")
 
     def move_to_recycle_bin(self, file_path: str):
@@ -182,10 +193,17 @@ class Recycler:
                 self.prompt.say(
                     f"{TCOLORS["success"]}Moved {TCOLORS["path"]}"
                     f"{destinies[path]["path"]}{TCOLORS["success"]}"
+<<<<<<< HEAD
+                    f" to recycle bin{TCOLORS["style end"]}")
+            except Exception as e:
+                print(f"{TCOLORS["error"]}Error moving "
+                      f"{TCOLORS["path"]}{path}{TCOLORS["error"]}to recycle bin: {e}")
+=======
                     f" to recycle bin.{TCOLORS["style end"]}")
             except Exception as e:
                 print(f"{TCOLORS["error"]}Error moving {TCOLORS["path"]}"
                       f"{path}{TCOLORS["error"]}to recycle bin: {e}")
+>>>>>>> d3b243486d746daf449df5bebed211cd1a930283
 
     def view_buffer_bin(self, name: str = None):
         message = ""
@@ -225,6 +243,7 @@ class Recycler:
                 datetime.utcfromtimestamp(int(entry[3]/1000)).strftime(
                     '%Y-%m-%d %H:%M:%S'))
 
+<<<<<<< HEAD
         for basename in files.keys():
             message += (f"File/folder with name {TCOLORS["success"]}"
                         f"{basename}{TCOLORS["style end"]}:\n")
@@ -233,12 +252,55 @@ class Recycler:
                             f"{path}{TCOLORS["style end"]}:\n")
                 for t in files[basename][path]:
                     message += f"\t\t Versions: {t}\n"
+
+=======
+        message = ""
+        if name is not None:
+            if name not in files:
+                self.prompt.say(f"{TCOLORS["error"]}Error"
+                                f"{TCOLORS["style end"]}:"
+                                f" No file with name {TCOLORS["success"]}"
+                                f"{name}{TCOLORS["style end"]}"
+                                f" found in buffer bin.")
+                return
+            message += f"File/folder with name {
+                TCOLORS["success"]}{name}{TCOLORS["style end"]}:\n"
+            for path in files[name].keys():
+                message += (f"\t Moved to buffer bin from "
+                            f"{TCOLORS["path"]}{path}"
+                            f"{TCOLORS["style end"]}:\n")
+                for t in files[name][path]:
+                    message += f"\t\t Versions: {t}\n"
+
+        else:
+            for basename in files.keys():
+                message += f"File/folder with name {
+                    TCOLORS["success"]}{basename}{TCOLORS["style end"]}:\n"
+                for path in files[basename].keys():
+                    message += (f"\t Moved to buffer bin from "
+                                f"{TCOLORS["path"]}{path}"
+                                f"{TCOLORS["style end"]}:\n")
+                    for t in files[basename][path]:
+                        message += f"\t\t Versions: {t}\n"
+
+>>>>>>> d3b243486d746daf449df5bebed211cd1a930283
         self.prompt.say(message)
 
     def recover_from_buffer_bin(self, file_path: str = None):
         db = self.__db_read_all()
 
     def empty_buffer_bin(self):
+<<<<<<< HEAD
+        flag = self.prompt.verify(f"{TCOLORS["warning"]}Warning{TCOLORS["style end"]}"
+                                  ": This action will move all files in the buffer bin"
+                                  "to recycle bin and it is not reversible,"
+                                  "are you sure(y/n):")
+        if not flag:
+            self.prompt.say("Buffer bin will not be emptied.")
+        else:
+            self.move_to_recycle_bin(self.buffer_bin_path)
+            self.__db_clear()
+=======
         self.__db_clear()
         contents = os.listdir(self.buffer_bin_path)
         for item in contents:
@@ -246,6 +308,7 @@ class Recycler:
             crapi.recycle(content_path)
         self.prompt.say(f"{TCOLORS["success"]}Emptied buffer bin."
                         f"{TCOLORS["style end"]}")
+>>>>>>> d3b243486d746daf449df5bebed211cd1a930283
 
     def check_recycle_bin(self) -> list:
         print("Check recycle bin called")
