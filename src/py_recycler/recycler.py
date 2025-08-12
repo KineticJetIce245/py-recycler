@@ -15,6 +15,8 @@ class Recycler:
         self.prompt = iop["prompt"]
         self.buffer_file = iop["buffer_file"]
         self.regex = iop["regex"]
+        if not os.path.exists(self.buffer_bin_path):
+            os.makedirs(self.buffer_bin_path, exist_ok=True)
 
     def __db_initialize(self, cursor: sqlite3.Cursor):
         cursor.execute('''
@@ -141,16 +143,24 @@ class Recycler:
                 os.makedirs(os.path.dirname(
                     destinies[path]["target"]), exist_ok=True)
                 shutil.move(path, destinies[path]["target"])
-                self.prompt.say(f"Moving {TCOLORS["path"]}{path}{TCOLORS["style end"]} to buffer bin: {TCOLORS["path"]}{
-                                destinies[path]["target"]}{TCOLORS["style end"]}")
+                self.prompt.say(f"Moving {TCOLORS["path"]}{path}"
+                                f"{TCOLORS["style end"]} to buffer bin: "
+                                f"{TCOLORS["path"]}"
+                                f"{destinies[path]["target"]}."
+                                f"{TCOLORS["style end"]}")
                 self.__db_log(
                     destinies[path]["name"],
                     destinies[path]["path"],
                     destinies[path]["time"]
                 )
+                self.prompt.say(
+                    f"{TCOLORS["success"]}Moved {TCOLORS["path"]}"
+                    f"{destinies[path]["path"]}{TCOLORS["success"]}"
+                    f" to buffer bin.{TCOLORS["style end"]}")
             except Exception as e:
-                self.prompt.say(f"{TCOLORS["error"]}Error moving {TCOLORS["path"]}{path}{
-                                TCOLORS["error"]} to buffer bin{TCOLORS["style end"]}: {e}")
+                self.prompt.say(f"{TCOLORS["error"]}Error moving"
+                                f" {TCOLORS["path"]}{path}{TCOLORS["error"]}"
+                                f" to buffer bin{TCOLORS["style end"]}: {e}")
 
     def move_to_recycle_bin(self, file_path: str):
         destinies = self.__resolve_path(file_path)
@@ -160,19 +170,22 @@ class Recycler:
             }: Moving files to recycle bin can not be undone by rc command.")
         for path in destinies.keys():
             flag = self.prompt.verify(
-                f"Moving {TCOLORS["path"]}{destinies[path]["path"]}{TCOLORS["style end"]} to recycle bin, are you sure? (y/n):")
+                f"Moving {TCOLORS["path"]}{destinies[path]["path"]}"
+                f"{TCOLORS["style end"]} to recycle bin, are you sure? (y/n):")
             if not flag:
                 self.prompt.say(
-                    f"{TCOLORS["path"]}{destinies[path]["path"]}{TCOLORS["style end"]} will not be moved to recycle bin.")
+                    f"{TCOLORS["path"]}{destinies[path]["path"]}"
+                    f"{TCOLORS["style end"]} will not be moved to recycle bin.")
                 continue
             try:
                 crapi.recycle(destinies[path]["path"])
                 self.prompt.say(
-                    f"{TCOLORS["success"]}Moved {TCOLORS["path"]}{
-                        destinies[path]["path"]}{TCOLORS["success"]} to recycle bin{TCOLORS["style end"]}")
+                    f"{TCOLORS["success"]}Moved {TCOLORS["path"]}"
+                    f"{destinies[path]["path"]}{TCOLORS["success"]}"
+                    f" to recycle bin.{TCOLORS["style end"]}")
             except Exception as e:
-                print(f"{TCOLORS["error"]}Error moving {TCOLORS["path"]}{
-                      path}{TCOLORS["error"]}to recycle bin: {e}")
+                print(f"{TCOLORS["error"]}Error moving {TCOLORS["path"]}"
+                      f"{path}{TCOLORS["error"]}to recycle bin: {e}")
 
     def view_buffer_bin(self, name: str = None):
         db = self.__db_read_all()
@@ -183,19 +196,24 @@ class Recycler:
             if files[entry[1]].get(entry[2]) is None:
                 files[entry[1]][entry[2]] = []
             files[entry[1]][entry[2]].append(
-                datetime.utcfromtimestamp(int(entry[3]/1000)).strftime('%Y-%m-%d %H:%M:%S'))
+                datetime.utcfromtimestamp(int(entry[3]/1000)).strftime(
+                    '%Y-%m-%d %H:%M:%S'))
 
         message = ""
         if name is not None:
             if name not in files:
-                self.prompt.say(f"{TCOLORS["error"]}Error{TCOLORS["style end"]}: No file with name {
-                                TCOLORS["success"]}{name}{TCOLORS["style end"]} found in buffer bin.")
+                self.prompt.say(f"{TCOLORS["error"]}Error"
+                                f"{TCOLORS["style end"]}:"
+                                f" No file with name {TCOLORS["success"]}"
+                                f"{name}{TCOLORS["style end"]}"
+                                f" found in buffer bin.")
                 return
             message += f"File/folder with name {
                 TCOLORS["success"]}{name}{TCOLORS["style end"]}:\n"
             for path in files[name].keys():
-                message += f"\t Moved to buffer bin from {TCOLORS["path"]
-                                                          }{path}{TCOLORS["style end"]}:\n"
+                message += (f"\t Moved to buffer bin from "
+                            f"{TCOLORS["path"]}{path}"
+                            f"{TCOLORS["style end"]}:\n")
                 for t in files[name][path]:
                     message += f"\t\t Versions: {t}\n"
 
@@ -204,8 +222,9 @@ class Recycler:
                 message += f"File/folder with name {
                     TCOLORS["success"]}{basename}{TCOLORS["style end"]}:\n"
                 for path in files[basename].keys():
-                    message += f"\t Moved to buffer bin from {TCOLORS["path"]
-                                                              }{path}{TCOLORS["style end"]}:\n"
+                    message += (f"\t Moved to buffer bin from "
+                                f"{TCOLORS["path"]}{path}"
+                                f"{TCOLORS["style end"]}:\n")
                     for t in files[basename][path]:
                         message += f"\t\t Versions: {t}\n"
 
@@ -214,8 +233,14 @@ class Recycler:
     def recover_from_buffer_bin(self, file_path: str, prompt: Prompt) -> bool:
         print("Rover from buffer bin called")
 
-    def empty_buffer_bin(self, prompt: Prompt) -> bool:
-        print("Empty buffer bin called")
+    def empty_buffer_bin(self):
+        self.__db_clear()
+        contents = os.listdir(self.buffer_bin_path)
+        for item in contents:
+            content_path = os.path.join(self.buffer_bin_path, item)
+            crapi.recycle(content_path)
+        self.prompt.say(f"{TCOLORS["success"]}Emptied buffer bin."
+                        f"{TCOLORS["style end"]}")
 
     def check_recycle_bin(self) -> list:
         print("Check recycle bin called")
