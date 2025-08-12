@@ -205,7 +205,8 @@ class Recycler:
                 if paths.get(entry[0]) is None:
                     paths[entry[0]] = []
                 paths[entry[0]].append(
-                    datetime.utcfromtimestamp(int(entry[1]/1000)).strftime('%Y-%m-%d %H:%M:%S'))
+                    datetime.utcfromtimestamp(int(entry[1]/1000)).strftime(
+                        '%Y-%m-%d %H:%M:%S'))
             for path in paths.keys():
                 message += (f"\t Moved to buffer bin from {TCOLORS["path"]}"
                             f"{path}{TCOLORS["style end"]}:\n")
