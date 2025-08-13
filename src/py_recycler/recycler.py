@@ -64,6 +64,7 @@ class Recycler:
     def __db_find_from_name(self, base: str):
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
+        self.__db__test(cursor)
         cursor.execute('''
             SELECT path, time
             FROM bin
@@ -77,6 +78,7 @@ class Recycler:
     def __db_clear(self):
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
+        self.__db__test(cursor)
         flag = self.prompt.verify(
             "Clearing all records in the buffer bin db, are you sure? (y/n):")
         if flag:
@@ -92,6 +94,20 @@ class Recycler:
             ''')
         conn.commit()
         conn.close()
+
+    def __db_find_last_time(self):
+        conn = sqlite3.connect(self.buffer_file)
+        cursor = conn.cursor()
+        self.__db__test(cursor)
+        cursor.execute('''
+            SELECT *
+            FROM bin
+            WHERE time = (SELECT MAX(time) FROM bin);
+        ''')
+        rows = cursor.fetchall()
+        conn.commit()
+        conn.close()
+        return rows
 
     def __resolve_path(self, file_path: str) -> dict[str]:
         destinies = {}
@@ -237,7 +253,10 @@ class Recycler:
         self.prompt.say(message)
 
     def recover_from_buffer_bin(self, file_path: str = None):
-        db = self.__db_read_all()
+        if file_path is None:
+            rows = self.__db_find_last_time()
+            for row in rows:
+                print(row)
 
     def empty_buffer_bin(self):
         self.__db_clear()

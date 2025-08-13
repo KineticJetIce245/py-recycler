@@ -62,9 +62,6 @@ def run(rop: dict[str, any]):
     if (rop["options"]["help"]):
         display_help(rop["prompt"])
 
-    elif (rop["options"]["undo"]):
-        pass
-
         # Case empty buffer bin
     elif (rop["options"]["empty"]):
         rop["recycler"].empty_buffer_bin()
@@ -75,8 +72,10 @@ def run(rop: dict[str, any]):
 
     # Case recovery
     elif (rop["options"]["recovery"]):
-        rop["recycler"].recover_files(
-            rop["parameters"])
+        if rop["parameters"] is None or len(rop["parameters"]) == 0:
+            rop["recycler"].recover_from_buffer_bin()
+        else:
+            rop["recycle"].recover_from_buffer_bin(rop["parameters"])
 
     # Case view
     elif (rop["options"]["view"]):
@@ -102,7 +101,7 @@ def run(rop: dict[str, any]):
 
     else:
         if (len(rop["parameters"]) == 0):
-            mainCycle(rop["prompt"])  # launch the application mode
+            display_help(rop["prompt"])
         else:
             for file_path in rop["parameters"]:
                 if (rop["options"]["buffer"]):
