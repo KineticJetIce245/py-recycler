@@ -28,7 +28,7 @@ class Recycler:
             )
         ''')  # 1 for recycled, 0 for not recycled
 
-    def __db__test(self, cursor: sqlite3.Cursor):
+    def __db_test(self, cursor: sqlite3.Cursor):
         cursor.execute('''
             SELECT name FROM sqlite_master
             WHERE type='table' AND name='bin'
@@ -40,7 +40,7 @@ class Recycler:
     def __db_log(self, name: str, path: str, time: int):
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
-        self.__db__test(cursor)
+        self.__db_test(cursor)
         cursor.execute('''
             INSERT INTO bin (base, path, time)
             VALUES (?, ?, ?)
@@ -52,7 +52,7 @@ class Recycler:
     def __db_read_all(self):
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
-        self.__db__test(cursor)
+        self.__db_test(cursor)
         cursor.execute('''
             SELECT * FROM bin
         ''')
@@ -64,7 +64,7 @@ class Recycler:
     def __db_find_from_name(self, base: str):
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
-        self.__db__test(cursor)
+        self.__db_test(cursor)
         cursor.execute('''
             SELECT path, time
             FROM bin
@@ -75,11 +75,29 @@ class Recycler:
         conn.close()
         return rows
 
+    def __db_remove_from_time(self, time: int):
+        conn = sqlite3.connect(self.buffer_file)
+        cursor = conn.cursor()
+        self.__db_test(cursor)
+        cursor.execute('''
+            DELETE FROM bin
+            WHERE time = ?
+        ''', (time,))
+        conn.commit()
+        cursor.execute('''
+            UPDATE sqlite_sequence
+            SET seq = (SELECT MAX(id) FROM bin)
+            WHERE name = 'bin';
+        ''')
+        conn.commit()
+        conn.close()
+
     def __db_clear(self):
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
-        self.__db__test(cursor)
+        self.__db_test(cursor)
         flag = self.prompt.verify(
+            f"{TCOLORS["warning"]}Warning{TCOLORS["style end"]}: "
             "Clearing all records in the buffer bin db, are you sure? (y/n):")
         if flag:
             cursor.execute('''
@@ -98,7 +116,7 @@ class Recycler:
     def __db_find_last_time(self):
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
-        self.__db__test(cursor)
+        self.__db_test(cursor)
         cursor.execute('''
             SELECT *
             FROM bin
@@ -252,11 +270,42 @@ class Recycler:
                     message += f"\t\t Versions: {t}\n"
         self.prompt.say(message)
 
-    def recover_from_buffer_bin(self, file_path: str = None):
-        if file_path is None:
+    def recover_from_buffer_bin(self, file_name: str = None):
+        if file_name is None:
             rows = self.__db_find_last_time()
             for row in rows:
-                print(row)
+                recover_path = row[2]
+
+                i = 0
+                while os.path.exists(recover_path):
+                    recover_path += f"_{i}"
+                    i += 1
+
+                os.makedirs(os.path.abspath(
+                    os.path.join(row[2], "..")), exist_ok=True)
+
+                file_path = os.path.join(self.buffer_bin_path,
+                                         str(row[3]), str(row[1]))
+                try:
+                    print(file_path)
+                    print(recover_path)
+                    shutil.move(file_path, recover_path)
+                    self.__db_remove_from_time(row[3])
+                    utc_time = datetime.utcfromtimestamp(
+                        int(row[3]/1000)).strftime('%Y-%m-%d %H:%M:%S')
+                    self.prompt.say(f"{TCOLORS["success"]}Recovered "
+                                    f"{TCOLORS["path"]}{row[1]}"
+                                    f"{TCOLORS["success"]} (version: "
+                                    f"{utc_time})"
+                                    f" as {TCOLORS["path"]}{recover_path}"
+                                    f"{TCOLORS["style end"]}.")
+                except Exception as e:
+                    self.prompt.say(f"{TCOLORS["error"]}Error"
+                                    f"{TCOLORS["style end"]}"
+                                    ": Failed to recover"
+                                    f" {TCOLORS["path"]}{file_path} "
+                                    f"{TCOLORS["style end"]}"
+                                    f"from buffer bin: {e}")
 
     def empty_buffer_bin(self):
         self.__db_clear()
@@ -267,5 +316,30 @@ class Recycler:
         self.prompt.say(f"{TCOLORS["success"]}Emptied buffer bin."
                         f"{TCOLORS["style end"]}")
 
-    def check_recycle_bin(self) -> list:
-        print("Check recycle bin called")
+    def empty_recycle_bin(self):
+        flag = self.prompt.verify(
+            f"{TCOLORS["warning"]}Warning{TCOLORS["style end"]}:"
+            " you are about to empty the recycle bins for"
+            f"{TCOLORS["error"]} ALL DRIVERS{TCOLORS["style end"]}."
+            "\nThis action is"
+            f" {TCOLORS["error"]}NOT REVERSIBLE{TCOLORS["style end"]}"
+            " (i.e. You will not"
+            " be able to recover the files in the recycle bin)."
+            "\nIf you do not know what you are doing, press 'n' to stop."
+            "\nAre you sure(y/n):")
+        if flag:
+            sc = crapi.clear_recycle_bin()
+            if sc == 0:
+                self.prompt.say(f"{TCOLORS["success"]}"
+                                "Emptied recycle bin."
+                                f"{TCOLORS["style end"]}")
+            else:
+                self.prompt.say(f"{TCOLORS["error"]}"
+                                f"Error:{TCOLORS["style end"]}"
+                                "Failed to empty recycle bin"
+                                f" with status code {sc}.")
+                if sc == -2147418113:
+                    self.prompt.say("This is probably because"
+                                    " the recycle bin is already empty.")
+        else:
+            self.prompt.say("Recycle bin will not be emptied.")

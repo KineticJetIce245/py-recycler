@@ -103,9 +103,24 @@ static PyObject* recycle(PyObject* self, PyObject* args) {
 
 }
 
+static PyObject* clear_recycle_bin(PyObject* self, PyObject* args) {
+  HRESULT hr = SHEmptyRecycleBin(
+    NULL,
+    NULL,
+    SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND
+  );
+
+  if (SUCCEEDED(hr)) {
+    return PyLong_FromLong(0);
+  } else {
+    return PyLong_FromLong(hr);
+  }
+}
+
 static PyMethodDef RecycleMethods[] = {
     {"check_recycle_bin", (PyCFunction)check_recycle_bin, METH_NOARGS, "Check the recycle bin status."},
     {"recycle", (PyCFunction)recycle, METH_VARARGS, "Send a file to the recycle bin."},
+    {"clear_recycle_bin", (PyCFunction)clear_recycle_bin, METH_NOARGS, "Clear the recycle bin."},
     {NULL, NULL, 0, NULL}  // Sentinel
 };
 
