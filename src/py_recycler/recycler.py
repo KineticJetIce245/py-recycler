@@ -167,6 +167,14 @@ class Recycler:
                     "time": timestamp
                 }
 
+        # EMMMMMMMMMMM idk if this is a good idea, but it works
+        # These are the characters that in Windows are not
+        # allowed in file names
+        elif ("/" in file_path or "\\" in file_path or
+              "?" in file_path or ":" in file_path or
+              "<" in file_path or "\"" in file_path or
+              ">" in file_path or "|" in file_path):
+            pass
         else:
             file_path = os.path.abspath(file_path)
             if not os.path.exists(file_path):

@@ -2,20 +2,21 @@ class Prompt:
 
     def __init__(self, silent: bool = False, log: bool = False,
                  start_up: bool = True, logloc: str = None, yes: bool = False):
+        self.logloc = logloc
         self.silent = silent
         self.start_up = start_up
         self.log = log
         self.yes = yes
 
     def __log(self, message: str):
-        # TODO: Implement logging functionality
-        pass
+        with open(self.logloc, 'a') as log_file:
+            log_file.write(message + '\n')
 
     def say(self, message: str):
         if self.silent is False:
             print(message)
         if self.log is True:
-            self.log(message)
+            self.__log(message)
 
     # Always outputs to the terminal
     def startup(self, message: str):

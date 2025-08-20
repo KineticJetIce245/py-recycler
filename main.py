@@ -75,7 +75,8 @@ for key in conf["options"].keys():
 params = args_parser.parse_parameters(input_params[3:], options, SHORT_OPTION)
 permn_prompt = prompt.Prompt(silent=options["silent"], log=options["log"],
                              start_up=conf["start_up"]["enable"],
-                             logloc=conf["path"]["log_file"],
+                             logloc=os.path.join(
+                                 input_params[1], conf["path"]["log_file"]),
                              yes=options["yes"])
 
 permn_prompt.startup(f"{style.TCOLORS["tip"]}{
