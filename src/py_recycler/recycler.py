@@ -92,6 +92,24 @@ class Recycler:
         conn.commit()
         conn.close()
 
+    def __db_remove_from_full_info(self, base: str, path: str, time: int):
+        conn = sqlite3.connect(self.buffer_file)
+        cursor = conn.cursor()
+        self.__db_test(cursor)
+        cursor.execute('''
+            DELETE FROM bin
+            WHERE base = ? AND path = ? AND time = ?
+        ''', (base, path, time))
+        conn.commit()
+        cursor.execute('''
+            UPDATE sqlite_sequence
+            SET seq = (SELECT MAX(id) FROM bin)
+            WHERE name = 'bin';
+        ''')
+        conn.commit()
+        conn.close()
+        pass
+
     def __db_clear(self):
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
@@ -141,7 +159,6 @@ class Recycler:
             for item in contents:
                 destination = os.path.join(self.buffer_bin_path,
                                            str(timestamp),
-                                           os.path.basename(self.call_path),
                                            item)
                 destinies[os.path.join(self.call_path, item)] = {
                     "target": destination,
@@ -239,8 +256,8 @@ class Recycler:
                 if paths.get(entry[0]) is None:
                     paths[entry[0]] = []
                 paths[entry[0]].append(
-                    datetime.utcfromtimestamp(int(entry[1]/1000)).strftime(
-                        '%Y-%m-%d %H:%M:%S'))
+                    f"{datetime.fromtimestamp(int(entry[1]/1000)).strftime(
+                        '%Y-%m-%d %H:%M:%S')} ({entry[1]})")
             for path in paths.keys():
                 message += (f"\t Moved to buffer bin from {TCOLORS["path"]}"
                             f"{path}{TCOLORS["style end"]}:\n")
@@ -250,6 +267,8 @@ class Recycler:
             return
 
         db = self.__db_read_all()
+        if len(db) == 0:
+            message = "The buffer bin is empty, nothing to view."
         files = {}
         for entry in db:
             if files.get(entry[1]) is None:
@@ -257,8 +276,8 @@ class Recycler:
             if files[entry[1]].get(entry[2]) is None:
                 files[entry[1]][entry[2]] = []
             files[entry[1]][entry[2]].append(
-                datetime.utcfromtimestamp(int(entry[3]/1000)).strftime(
-                    '%Y-%m-%d %H:%M:%S'))
+                f"{datetime.fromtimestamp(int(entry[3]/1000)).strftime(
+                    '%Y-%m-%d %H:%M:%S')} ({entry[3]})")
 
         for basename in files.keys():
             message += (f"File/folder with name {TCOLORS["success"]}"
@@ -270,42 +289,118 @@ class Recycler:
                     message += f"\t\t Versions: {t}\n"
         self.prompt.say(message)
 
-    def recover_from_buffer_bin(self, file_name: str = None):
-        if file_name is None:
-            rows = self.__db_find_last_time()
-            for row in rows:
-                recover_path = row[2]
+    def __undo(self):
+        rows = self.__db_find_last_time()
+        if len(rows) == 0:
+            self.prompt.say("The buffer bin is empty, nothing to recover.")
+        for row in rows:
+            recover_path = row[2]
 
-                i = 0
-                while os.path.exists(recover_path):
-                    recover_path += f"_{i}"
-                    i += 1
+            i = 0
+            while os.path.exists(recover_path):
+                recover_path += f"_{i}"
+                i += 1
 
-                os.makedirs(os.path.abspath(
-                    os.path.join(row[2], "..")), exist_ok=True)
+            os.makedirs(os.path.abspath(
+                os.path.join(row[2], "..")), exist_ok=True)
 
-                file_path = os.path.join(self.buffer_bin_path,
-                                         str(row[3]), str(row[1]))
+            file_path = os.path.join(self.buffer_bin_path,
+                                     str(row[3]), str(row[1]))
+            try:
+                shutil.move(file_path, recover_path)
+                self.__db_remove_from_time(row[3])
+                local_time = datetime.fromtimestamp(
+                    int(row[3]/1000)).strftime('%Y-%m-%d %H:%M:%S')
+                self.prompt.say(f"{TCOLORS["success"]}Recovered "
+                                f"{TCOLORS["path"]}{row[1]}"
+                                f"{TCOLORS["success"]} (version: "
+                                f"{local_time})"
+                                f" as {TCOLORS["path"]}{recover_path}"
+                                f"{TCOLORS["style end"]}.")
+            except Exception as e:
+                self.prompt.say(f"{TCOLORS["error"]}Error"
+                                f"{TCOLORS["style end"]}"
+                                ": Failed to recover"
+                                f" {TCOLORS["path"]}{file_path} "
+                                f"{TCOLORS["style end"]}"
+                                f"from buffer bin: {e}")
+
+    def recover_from_buffer_bin(self, name: str = None):
+        if name is None:
+            self.__undo()
+        else:
+            result = self.__db_find_from_name(name)
+            if len(result) == 0:
+                self.prompt.say(f"{TCOLORS["error"]}Error{TCOLORS["style end"]}"
+                                f": No file with name "
+                                f"{TCOLORS["success"]}{name}"
+                                f"{TCOLORS["style end"]} found in buffer bin.")
+
+            paths = {}
+            for entry in result:
+                if paths.get(entry[0]) is None:
+                    paths[entry[0]] = []
+                paths[entry[0]].append(int(entry[1]))
+
+            message = (f"Recovering files with name {TCOLORS["success"]}"
+                       f"{name}{TCOLORS["style end"]}:\n")
+
+            counter = 0
+            listed_path = []
+            for path in paths.keys():
+                message += ("Moved to buffer bin from "
+                            f"{TCOLORS["path"]}{path}{TCOLORS["style end"]}:\n")
+                for timestamp in paths[path]:
+                    message += (f"\t[{TCOLORS["success"]}{counter}"
+                                f"{TCOLORS["style end"]}] "
+                                "Version: "
+                                f"{datetime.fromtimestamp(
+                                    timestamp/1000).strftime(
+                                    '%Y-%m-%d %H:%M:%S')} ({timestamp})\n")
+                    listed_path.append((path, timestamp))
+                    counter += 1
+
+            self.prompt.say(message)
+
+            def checker(answer: str) -> bool:
                 try:
-                    print(file_path)
-                    print(recover_path)
-                    shutil.move(file_path, recover_path)
-                    self.__db_remove_from_time(row[3])
-                    utc_time = datetime.utcfromtimestamp(
-                        int(row[3]/1000)).strftime('%Y-%m-%d %H:%M:%S')
-                    self.prompt.say(f"{TCOLORS["success"]}Recovered "
-                                    f"{TCOLORS["path"]}{row[1]}"
-                                    f"{TCOLORS["success"]} (version: "
-                                    f"{utc_time})"
-                                    f" as {TCOLORS["path"]}{recover_path}"
-                                    f"{TCOLORS["style end"]}.")
-                except Exception as e:
-                    self.prompt.say(f"{TCOLORS["error"]}Error"
-                                    f"{TCOLORS["style end"]}"
-                                    ": Failed to recover"
-                                    f" {TCOLORS["path"]}{file_path} "
-                                    f"{TCOLORS["style end"]}"
-                                    f"from buffer bin: {e}")
+                    num = int(answer)
+                    return 0 <= num < counter
+                except ValueError:
+                    return False
+            version = int(self.prompt.choice(checker,
+                                             "Select the version to recover by number:"))
+            print(listed_path[version])
+
+            recover_path = listed_path[version][0]
+            i = 0
+            while os.path.exists(recover_path):
+                recover_path += f"_{i}"
+                i += 1
+            os.makedirs(os.path.abspath(
+                os.path.join(listed_path[version][0], "..")), exist_ok=True)
+            file_path = os.path.join(self.buffer_bin_path,
+                                     str(listed_path[version][1]), str(name))
+            try:
+                shutil.move(file_path, recover_path)
+                self.__db_remove_from_full_info(
+                    name, listed_path[version][0], listed_path[version][1])
+                local_time = datetime.fromtimestamp(
+                    int(int(listed_path[version][1])/1000)).strftime(
+                    '%Y-%m-%d %H:%M:%S')
+                self.prompt.say(f"{TCOLORS["success"]}Recovered "
+                                f"{TCOLORS["path"]}{name}"
+                                f"{TCOLORS["success"]} (version: "
+                                f"{local_time})"
+                                f" as {TCOLORS["path"]}{recover_path}"
+                                f"{TCOLORS["style end"]}.")
+            except Exception as e:
+                self.prompt.say(f"{TCOLORS["error"]}Error"
+                                f"{TCOLORS["style end"]}"
+                                ": Failed to recover"
+                                f" {TCOLORS["path"]}{file_path} "
+                                f"{TCOLORS["style end"]}"
+                                f"from buffer bin: {e}")
 
     def empty_buffer_bin(self):
         self.__db_clear()

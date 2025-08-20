@@ -38,10 +38,6 @@ Options:
     [-b | --buffer=<true/false>]""")
 
 
-def mainCycle(prompt: Prompt):
-    pass
-
-
 def run(rop: dict[str, any]):
     """
     # This function first determines the operation mode
@@ -75,7 +71,8 @@ def run(rop: dict[str, any]):
         if rop["parameters"] is None or len(rop["parameters"]) == 0:
             rop["recycler"].recover_from_buffer_bin()
         else:
-            rop["recycle"].recover_from_buffer_bin(rop["parameters"])
+            for name in rop["parameters"]:
+                rop["recycler"].recover_from_buffer_bin(name)
 
     # Case view
     elif (rop["options"]["view"]):

@@ -22,7 +22,7 @@ class Prompt:
         if self.start_up is True:
             print(message)
 
-    def verify(self, message: str) -> str:
+    def verify(self, message: str) -> bool:
         while True:
             answer = input(message)
             if (self.yes):
@@ -33,3 +33,14 @@ class Prompt:
                 return False
             else:
                 print("Unrecoginzed answer, please answer with 'y' or 'n'.")
+
+    def choice(self, check_answer, message: str) -> str:
+        while True:
+            answer = input(message)
+            if check_answer(answer):
+                return answer
+            else:
+                print("Unrecognized answer, try again")
+
+    def ask(self, message: str) -> str:
+        return input(message)
