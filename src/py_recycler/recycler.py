@@ -2,6 +2,7 @@ import os
 import time
 import shutil
 import sqlite3
+import glob
 from datetime import datetime
 from .prompt import Prompt
 from .style import TCOLORS
@@ -19,6 +20,9 @@ class Recycler:
             os.makedirs(self.buffer_bin_path, exist_ok=True)
 
     def __db_initialize(self, cursor: sqlite3.Cursor):
+        """
+        # Initializes the database if it does not exist
+        """
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS bin (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,9 +30,14 @@ class Recycler:
                 path TEXT NOT NULL,
                 time INTEGER NOT NULL
             )
-        ''')  # 1 for recycled, 0 for not recycled
+        ''')
 
     def __db_test(self, cursor: sqlite3.Cursor):
+        """
+        # Tests if the database exists, if not, initializes it.
+        # This sould be called at the start of every
+        # db related function.
+        """
         cursor.execute('''
             SELECT name FROM sqlite_master
             WHERE type='table' AND name='bin'
@@ -38,6 +47,10 @@ class Recycler:
             self.__db_initialize(cursor)
 
     def __db_log(self, name: str, path: str, time: int):
+        """
+        # Creates a record in the db for the file
+        # moved into the buffer bin
+        """
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
         self.__db_test(cursor)
@@ -50,6 +63,9 @@ class Recycler:
         conn.close()
 
     def __db_read_all(self):
+        """
+        # Reads all records in the database
+        """
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
         self.__db_test(cursor)
@@ -62,6 +78,9 @@ class Recycler:
         return rows
 
     def __db_find_from_name(self, base: str):
+        """
+        # Finds records with the give base name
+        """
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
         self.__db_test(cursor)
@@ -75,14 +94,17 @@ class Recycler:
         conn.close()
         return rows
 
-    def __db_remove_from_time(self, time: int):
+    def __db_remove_from_time(self, timestamp: int):
+        """
+        # Deletes all records with the given timestamp
+        """
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
         self.__db_test(cursor)
         cursor.execute('''
             DELETE FROM bin
             WHERE time = ?
-        ''', (time,))
+        ''', (timestamp,))
         conn.commit()
         cursor.execute('''
             UPDATE sqlite_sequence
@@ -92,14 +114,17 @@ class Recycler:
         conn.commit()
         conn.close()
 
-    def __db_remove_from_full_info(self, base: str, path: str, time: int):
+    def __db_remove_from_full_info(self, base: str, path: str, timestamp: int):
+        """
+        # Deletes all records with the given base name, path and timestamp
+        """
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
         self.__db_test(cursor)
         cursor.execute('''
             DELETE FROM bin
             WHERE base = ? AND path = ? AND time = ?
-        ''', (base, path, time))
+        ''', (base, path, timestamp))
         conn.commit()
         cursor.execute('''
             UPDATE sqlite_sequence
@@ -111,6 +136,9 @@ class Recycler:
         pass
 
     def __db_clear(self):
+        """
+        # Clears all records in the db
+        """
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
         self.__db_test(cursor)
@@ -132,6 +160,9 @@ class Recycler:
         conn.close()
 
     def __db_find_last_time(self):
+        """
+        # Finds the records with the latest timestamp
+        """
         conn = sqlite3.connect(self.buffer_file)
         cursor = conn.cursor()
         self.__db_test(cursor)
@@ -170,11 +201,37 @@ class Recycler:
         # EMMMMMMMMMMM idk if this is a good idea, but it works
         # These are the characters that in Windows are not
         # allowed in file names
-        elif ("/" in file_path or "\\" in file_path or
-              "?" in file_path or ":" in file_path or
+        elif ("?" in file_path or ":" in file_path or
               "<" in file_path or "\"" in file_path or
-              ">" in file_path or "|" in file_path):
-            pass
+              ">" in file_path or "|" in file_path or
+              "[" in file_path or "]" in file_path or
+              "*" in file_path):
+
+            contents = glob.glob(file_path, recursive=True)
+            if len(contents) == 0:
+                self.prompt.say(f"{TCOLORS["error"]}Error"
+                                f"{TCOLORS["style end"]}: {TCOLORS["path"]}"
+                                f"{file_path}{TCOLORS["style end"]} does not exist.")
+                return {}
+
+            timestamp = int(time.time() * 1000)
+            for item in contents:
+                item_basename = os.path.basename(item)
+
+                self.prompt.say(f"Found {TCOLORS['path']}"
+                                f"{item}{TCOLORS['style end']}")
+
+                destination = os.path.join(self.buffer_bin_path,
+                                           str(timestamp),
+                                           item_basename)
+
+                destinies[os.path.abspath(os.path.join(self.call_path, item))] = {
+                    "target": destination,
+                    "name": item_basename,
+                    "path": os.path.abspath(os.path.join(self.call_path, item)),
+                    "time": timestamp
+                }
+
         else:
             file_path = os.path.abspath(file_path)
             if not os.path.exists(file_path):
@@ -197,17 +254,27 @@ class Recycler:
         return destinies
 
     def move_to_buffer_bin(self, file_path: str):
+        """
+        # Moves the specified files/folders to the buffer bin
+        # Adds a record in the db for each file/folder moved
+        """
         destinies = self.__resolve_path(file_path)
+        if destinies == {}:
+            self.prompt.say(f"{TCOLORS["success"]}Nothing to move to buffer"
+                            f" bin, exiting.{TCOLORS["style end"]}")
         for path in destinies.keys():
             try:
+                flag = self.prompt.verify(f"Sending {TCOLORS["path"]}{path}"
+                                          f"{TCOLORS["style end"]}"
+                                          " to buffer bin, are you sure? (y/n):")
+                if not flag:
+                    self.prompt.say(f"{TCOLORS["path"]}{path}"
+                                    f" {TCOLORS["style end"]}"
+                                    "will not be moved to buffer bin.")
+                    continue
                 os.makedirs(os.path.dirname(
                     destinies[path]["target"]), exist_ok=True)
                 shutil.move(path, destinies[path]["target"])
-                self.prompt.say(f"Moving {TCOLORS["path"]}{path}"
-                                f"{TCOLORS["style end"]} to buffer bin: "
-                                f"{TCOLORS["path"]}"
-                                f"{destinies[path]["target"]}."
-                                f"{TCOLORS["style end"]}")
                 self.__db_log(
                     destinies[path]["name"],
                     destinies[path]["path"],
@@ -223,6 +290,9 @@ class Recycler:
                                 f" to buffer bin{TCOLORS["style end"]}: {e}")
 
     def move_to_recycle_bin(self, file_path: str):
+        """
+        # Moves the specified files/folders to the recycle bin
+        """
         destinies = self.__resolve_path(file_path)
         self.prompt.say(
             f"{TCOLORS["warning"]}Warning{TCOLORS["style end"]}"
@@ -247,6 +317,10 @@ class Recycler:
                       f"{path}{TCOLORS["error"]}to recycle bin: {e}")
 
     def view_buffer_bin(self, name: str = None):
+        """
+        # Displays the contents of the buffer bin
+        # When name == None, displays all files in the buffer bin
+        """
         message = ""
         if name is not None:
             result = self.__db_find_from_name(name)
@@ -298,6 +372,10 @@ class Recycler:
         self.prompt.say(message)
 
     def __undo(self):
+        """
+        # Recovers the last moved files/folders from the buffer bin
+        # Deletes the corresponding records in the db
+        """
         rows = self.__db_find_last_time()
         if len(rows) == 0:
             self.prompt.say("The buffer bin is empty, nothing to recover.")
@@ -334,6 +412,10 @@ class Recycler:
                                 f"from buffer bin: {e}")
 
     def recover_from_buffer_bin(self, name: str = None):
+        """
+        # Recovers a specific file/folder from the buffer bin
+        # When name == None, recovers the last moved files/folders
+        """
         if name is None:
             self.__undo()
         else:
@@ -411,6 +493,9 @@ class Recycler:
                                 f"from buffer bin: {e}")
 
     def empty_buffer_bin(self):
+        """
+        # Empties the buffer bin by moving all files to the recycle bin
+        """
         self.__db_clear()
         contents = os.listdir(self.buffer_bin_path)
         for item in contents:
@@ -420,6 +505,9 @@ class Recycler:
                         f"{TCOLORS["style end"]}")
 
     def empty_recycle_bin(self):
+        """
+        # Empties the recycle bin for all drives
+        """
         flag = self.prompt.verify(
             f"{TCOLORS["warning"]}Warning{TCOLORS["style end"]}:"
             " you are about to empty the recycle bins for"
