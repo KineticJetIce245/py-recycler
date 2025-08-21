@@ -103,6 +103,9 @@ static PyObject* recycle(PyObject* self, PyObject* args) {
 
 }
 
+/**
+ * This function clears the recycle bin.
+ */
 static PyObject* clear_recycle_bin(PyObject* self, PyObject* args) {
   HRESULT hr = SHEmptyRecycleBin(
     NULL,

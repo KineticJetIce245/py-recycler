@@ -25,7 +25,6 @@ SHORT_OPTION = {
     "l": "log",
     "b": "buffer",
     "y": "yes",
-    "w": "regex",
 }
 options = {
     # Special mode (undo): undoing the last recycle operation
@@ -47,7 +46,6 @@ options = {
     # Normal mode
     "buffer": False,        # If true, first sends files to buffer bin
     "yes": False,           # If true, yes will be assumed for all prompts
-    "regex": False,         # If true, regex will be used for file matching
 }
 
 """
@@ -93,7 +91,6 @@ recycler_options = {
     "buffer_bin_path": buffer_bin_path,
     "prompt": permn_prompt,
     "buffer_file": os.path.join(input_params[1], conf["path"]["buffer_file"]),
-    "regex": options["regex"],
 }
 recycler_instance = recycler.Recycler(recycler_options)
 
@@ -108,6 +105,4 @@ run_options = {
     "conf_file": conf,
     "prompt": permn_prompt
 }
-# print(options)
-# print(params)
 core.run(run_options)

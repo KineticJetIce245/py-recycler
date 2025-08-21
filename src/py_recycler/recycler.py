@@ -15,7 +15,6 @@ class Recycler:
         self.buffer_bin_path = iop["buffer_bin_path"]
         self.prompt = iop["prompt"]
         self.buffer_file = iop["buffer_file"]
-        self.regex = iop["regex"]
         if not os.path.exists(self.buffer_bin_path):
             os.makedirs(self.buffer_bin_path, exist_ok=True)
 
@@ -177,12 +176,13 @@ class Recycler:
         return rows
 
     def __resolve_path(self, file_path: str) -> dict[str]:
+        """
+        # Returns a dictionary packed with information about the files/folders
+        # about to be moved to the buffer bin / recycle bin.
+        """
         destinies = {}
 
-        if self.regex:
-            pass
-
-        elif (file_path == "." or file_path == "*" or
+        if (file_path == "." or file_path == "*" or
                 file_path == "./" or file_path == ".\\"):
 
             contents = os.listdir(self.call_path)
