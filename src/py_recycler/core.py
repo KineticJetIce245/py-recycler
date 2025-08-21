@@ -89,12 +89,19 @@ def run(rop: dict[str, any]):
                 "Configuration mode accepts only two parameters.")
             exit(1)
         elif (len(rop["parameters"]) == 0):
-            rop["prompt"].say(rop["options"])
+            rop["prompt"].say(rop["conf_file"])
         elif (len(rop["parameters"]) == 1):
-            rop["prompt"].say(rop["options"][rop["parameters"][0]])
+            keys = rop["parameters"][0].split(".")
+            # Evil recursive solution
+            value = rop["conf_file"]
+            for key in keys:
+                value = value.get(key, "This entry does not exist.")
+
+            rop["prompt"].say(value)
         else:
-            modify(rop["conf_file"],
-                   rop["parameters"][0], rop["parameters"][1])
+            modify(rop["conf_location"],
+                   rop["parameters"][0], rop["parameters"][1],
+                   rop["prompt"])
 
     else:
         if (len(rop["parameters"]) == 0):

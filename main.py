@@ -103,6 +103,7 @@ run_options = {
     "options": options,
     "recycler": recycler_instance,
     "conf_file": conf,
+    "conf_location": os.path.join(input_params[1], "config.toml"),
     "prompt": permn_prompt
 }
 core.run(run_options)

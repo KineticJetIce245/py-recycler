@@ -1,6 +1,7 @@
 import urllib.request
 import urllib.error
 import tomllib
+import tomli_w
 from .prompt import Prompt
 
 
@@ -69,6 +70,25 @@ def load(config_location: str) -> dict:
         exit(1)
 
 
-def modify(config_location: str, entry: str, value: str) -> bool:
-    # TODO:
-    pass
+def modify(config_location: str, entry: str, value: str, temp_prompt: Prompt):
+    """
+    # Modifies the configuration file
+    """
+    with open(config_location, "rb") as f:
+        table = tomllib.load(f)
+
+    keys = entry.split(".")
+    # HACK: Again evil recursive trick
+    sub_table = table
+    for i in range(len(keys) - 1):
+        validity = sub_table.get(keys[i], None)
+        if validity is None:
+            temp_prompt.say("This entry does not exist. Creating a new entry.")
+            sub_table[keys[i]] = {}
+            sub_table = sub_table[keys[i]]
+        else:
+            sub_table = sub_table[keys[i]]
+    sub_table[keys[-1]] = value
+
+    with open("config.toml", "wb") as f:
+        tomli_w.dump(table, f)
