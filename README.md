@@ -1,75 +1,78 @@
-﻿# py-recycler
+# ♻️ py-recycler
+**py-recycler** is a lightweight command-line utility for Windows that lets you send files or
+folders either to a temporary buffer bin or directly to the Windows Recycle Bin.  
 
-py-recycler is a simple command line tool to recycle
-files/folders to a buffer bin or directly to the
-Windows' recycle bin.
+## 🚀 Installation
++ Download the latest release.
++ Extract it to any directory of your choice.
++ Add that directory to your system `PATH`.  
 
-# Installation
-
-Download the latest release and unzip it to
-any directory. Add that directory to your PATH.
-The `rc.bat` file is a simple wrapper to call the
-script with python.
-
-_In some cases, you may need to allow the execution
-of the script by setting `ExecutionPolicy`._
-
-# Usage
-
-Recycles files/folders to buffer bin or to recycle bin
-(default depends on the `config.toml` file), using `-b` option
-to reverse the option:
-
+## 📋 System Requirements
+### 🐍 Python  
+- Requires **Python 3.11+**, as it relies on the built-in `tomllib` module for reading TOML configuration files.  
+- Also requires the [`tomli-w`](https://pypi.org/project/tomli-w/) package for writing TOML files. Install it with:  
+```bash
+pip install tomli-w
 ```
+
+### 🔐 Execution Policy
+In some cases, you may need to adjust the PowerShell *ExecutionPolicy* settings to allow the script to run.
+
+## 🛠️ Usage
+### ♻️ Recycle Files/folders
+Recycle files/folders to the **buffer bin** 🗂️ or directly to the **Windows Recycle Bin** 🗑️.  
+(Default behavior is defined in `config.toml` 📄).  
+Use `-b` to reverse the default option:  
+```bash
 rc <file/folder> [<file/folder> ...]
 ```
 
-Sends everything in buffer bin to recycle bin, files/folders
-sent to recycle bin can not be recovered with this program:
-
-```
+### 🗑️ Empty the Buffer Bin
+Send everything in the buffer bin to the **Windows Recycle Bin** 🗑️.  
+⚠️ Files/folders sent to the recycle bin cannot be recovered with this program:
+```bash
 rc [-e | --empty=<true/false>]
 ```
-
-**PERMANENTLY** deletes all files/folders in recycle bin:
-
-```
+### 💥 Permanently Delete
+⚠️ **PERMANENTLY** deletes all files/folders in the **Windows Recycle Bin** 🗑️ (use with caution!):
+```bash
 rc [-x | --emptyrecycle=<true/false>]
 ```
 
-Modifies the configuration file, when no name or value is specified,
-prints the current configuration, when only name is specified,
-prints the value of the name, when both name and value are specified,
-modifies the value of the name:
-
-```
+### ⚙️ Configuration
+Modify the configuration file (`config.toml` 📄):
+- No arguments → prints the full config
+- Name only → prints that value
+- Name + value → updates the config
+```bash
 rc [-c | --config=<true/false>] [<name> <value>]
 ```
 
-Recovers files from buffer bin, when files/folders are not specified it
-recovers last file/folder sent to buffer bin:
-
-```
+### 🔄 Recover Files
+Recover files/folders from the buffer bin.
+If none specified, restores the **last** item sent to the buffer bin:
+```bash
 rc [-r | --recovery=<true/false>] [<file/folder> ...]
 ```
 
-Shows files in buffer bin, when files/folders are not specified, it shows all
-in buffer bin:
-
-```
+### 👀 View Buffer Bin
+Show files/folders currently in the buffer bin.
+If none specified, lists all items:
+```bash
 rc [-v | --view=<true/false>] [<file/folder> ...]
 ```
 
-Display this help message:
-
-```
+### 📖 Help
+Display the help message:
+```bash
 rc [-h | --help=<true/false>]
 ```
-
-Options:
-
+### ⚡ Additional Options
+```bash
+[-s | --silent=<true/false>]   # Run without prompts  
+[-l | --log=<true/false>]      # Enable/disable logging  
+[-y | --yes=<true/false>]      # Auto-confirm actions  
+[-b | --buffer=<true/false>]   # Switch buffer/recycle mode
 ```
-[-s | --silent=<true/false>] [-l | --log=<true/false>] [-y | --yes=<true/false>]
-[-b | --buffer=<true/false>]
-```
+
 
