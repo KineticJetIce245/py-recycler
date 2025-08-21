@@ -4,7 +4,8 @@ folders either to a temporary buffer bin or directly to the Windows Recycle Bin.
 
 ## 🚀 Installation
 + Download the latest release.
-+ Extract it to any directory of your choice.
++ Extract it to any directory of your choice (⚠️ The path should
+  not contain space).
 + Add that directory to your system `PATH`.  
 
 ## 📋 System Requirements
@@ -74,5 +75,6 @@ rc [-h | --help=<true/false>]
 [-y | --yes=<true/false>]      # Auto-confirm actions  
 [-b | --buffer=<true/false>]   # Switch buffer/recycle mode
 ```
+
 
 
