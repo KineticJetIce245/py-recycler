@@ -45,14 +45,14 @@ def load(config_location: str) -> dict:
             config = tomllib.load(f)
             success_flag = True
 
-        if (success_flag):
+        if success_flag:
             return config
 
     except FileNotFoundError as e:
         temp_prompt.say(f"Configuration file not found: {e}")
         temp_prompt.say("Trying to download the configuration file...")
 
-        if (__download_config(config_location, temp_prompt)):
+        if __download_config(config_location, temp_prompt):
             with open(config_location, "rb") as f:
                 config = tomllib.load(f)
                 success_flag = True
@@ -63,11 +63,8 @@ def load(config_location: str) -> dict:
     except Exception as e:
         temp_prompt.say(f"Error reading configuration file: {e}")
 
-    if (success_flag):
-        return config
-    else:
-        temp_prompt.say("Failed to load configuration file. Exiting.")
-        exit(1)
+    temp_prompt.say("Failed to load configuration file. Exiting.")
+    exit(1)
 
 
 def modify(config_location: str, entry: str, value: str, temp_prompt: Prompt):

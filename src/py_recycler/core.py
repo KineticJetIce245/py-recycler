@@ -38,36 +38,33 @@ Options:
     [-b | --buffer=<true/false>]""")
 
 
-def run(rop: dict[str, any]):
+def run(rop):
     """
     # This function first determines the operation mode
     # then analyzes the parameters.
     """
-    conflicting_options = {
-        "empty", "emptyrecycle",
-        "recovery", "config", "help"
-    }
+    conflicting_options = {"empty", "emptyrecycle", "recovery", "config", "help"}
     flags_received = 0
     for keys in conflicting_options:
         flags_received += rop["options"][keys]
-    if (flags_received > 1):
+    if flags_received > 1:
         rop["prompt"].say("Conflicting options received.")
         exit(1)
 
     # Case help
-    if (rop["options"]["help"]):
+    if rop["options"]["help"]:
         display_help(rop["prompt"])
 
         # Case empty buffer bin
-    elif (rop["options"]["empty"]):
+    elif rop["options"]["empty"]:
         rop["recycler"].empty_buffer_bin()
 
     # Case empty recycle bin
-    elif (rop["options"]["emptyrecycle"]):
+    elif rop["options"]["emptyrecycle"]:
         rop["recycler"].empty_recycle_bin()
 
     # Case recovery
-    elif (rop["options"]["recovery"]):
+    elif rop["options"]["recovery"]:
         if rop["parameters"] is None or len(rop["parameters"]) == 0:
             rop["recycler"].recover_from_buffer_bin()
         else:
@@ -75,7 +72,7 @@ def run(rop: dict[str, any]):
                 rop["recycler"].recover_from_buffer_bin(name)
 
     # Case view
-    elif (rop["options"]["view"]):
+    elif rop["options"]["view"]:
         if len(rop["parameters"]) == 0:
             rop["recycler"].view_buffer_bin()
         else:
@@ -83,14 +80,13 @@ def run(rop: dict[str, any]):
                 rop["recycler"].view_buffer_bin(name)
 
     # Case Configuration
-    elif (rop["options"]["config"]):
-        if (len(rop["parameters"]) > 2):
-            rop["prompt"].say(
-                "Configuration mode accepts only two parameters.")
+    elif rop["options"]["config"]:
+        if len(rop["parameters"]) > 2:
+            rop["prompt"].say("Configuration mode accepts only two parameters.")
             exit(1)
-        elif (len(rop["parameters"]) == 0):
+        elif len(rop["parameters"]) == 0:
             rop["prompt"].say(rop["conf_file"])
-        elif (len(rop["parameters"]) == 1):
+        elif len(rop["parameters"]) == 1:
             keys = rop["parameters"][0].split(".")
             # Evil recursive solution
             value = rop["conf_file"]
@@ -99,16 +95,19 @@ def run(rop: dict[str, any]):
 
             rop["prompt"].say(value)
         else:
-            modify(rop["conf_location"],
-                   rop["parameters"][0], rop["parameters"][1],
-                   rop["prompt"])
+            modify(
+                rop["conf_location"],
+                rop["parameters"][0],
+                rop["parameters"][1],
+                rop["prompt"],
+            )
 
     else:
-        if (len(rop["parameters"]) == 0):
+        if len(rop["parameters"]) == 0:
             display_help(rop["prompt"])
         else:
             for file_path in rop["parameters"]:
-                if (rop["options"]["buffer"]):
+                if rop["options"]["buffer"]:
                     rop["recycler"].move_to_buffer_bin(file_path)
                 else:
                     rop["recycler"].move_to_recycle_bin(file_path)
