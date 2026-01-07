@@ -1,7 +1,7 @@
 import urllib.request
-import urllib.error
 import tomllib
 import tomli_w
+import os
 from .prompt import Prompt
 
 
@@ -85,7 +85,13 @@ def modify(config_location: str, entry: str, value: str, temp_prompt: Prompt):
             sub_table = sub_table[keys[i]]
         else:
             sub_table = sub_table[keys[i]]
-    sub_table[keys[-1]] = value
+    if value.lower() == "true":
+        sub_table[keys[-1]] = True
+    elif value.lower() == "false":
+        sub_table[keys[-1]] = False
+    else:
+        sub_table[keys[-1]] = value
 
-    with open("config.toml", "wb") as f:
+    with open(config_location, "wb") as f:
         tomli_w.dump(table, f)
+        temp_prompt.say(f"Modified '{entry}' to '{value}' successfully.")
