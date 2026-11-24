@@ -24,11 +24,11 @@ class Prompt:
             print(message)
 
     def verify(self, message: str) -> bool:
+        if (self.yes):
+            return True
         while True:
             answer = input(message)
-            if (self.yes):
-                return True
-            elif (answer.lower() == "y" or answer.lower() == "yes"):
+            if (answer.lower() == "y" or answer.lower() == "yes"):
                 return True
             elif (answer.lower() == "n" or answer.lower() == "no"):
                 return False

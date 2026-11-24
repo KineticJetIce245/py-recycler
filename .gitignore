@@ -1,0 +1,4 @@
+# local runtime state, never publish
+buffer.db
+py-recycle.log
+__pycache__/
